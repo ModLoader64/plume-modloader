@@ -101,6 +101,11 @@ namespace plume {
         virtual RenderWindow getWindow() const = 0;
         virtual bool isEmpty() const = 0;
 
+        // Layout expected by present(), which may consume offscreen textures.
+        virtual RenderTextureLayout getPresentLayout() const {
+            return RenderTextureLayout::PRESENT;
+        }
+
         // Only valid if displayTiming is enabled in capabilities.
         virtual uint32_t getRefreshRate() const = 0;
     };
