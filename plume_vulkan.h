@@ -403,6 +403,7 @@ namespace plume {
     };
 
     struct VulkanDevice : RenderDevice {
+        bool timelineSemaphoreSupported = false;
         VkDevice vk = VK_NULL_HANDLE;
         VulkanInterface *renderInterface = nullptr;
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;

@@ -6,7 +6,9 @@
 //
 
 #define VMA_IMPLEMENTATION
+#ifndef PLUME_NO_VOLK_IMPLEMENTATION
 #define VOLK_IMPLEMENTATION 
+#endif
 
 #include "plume_vulkan.h"
 
@@ -89,6 +91,14 @@ namespace plume {
         VK_GOOGLE_DISPLAY_TIMING_EXTENSION_NAME,
         // Vulkan spec requires this to be enabled if supported by the driver.
         VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
+        // Optional sharing with other graphics devices or processes.
+#   if defined(_WIN32)
+        VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
+#   elif defined(__linux__)
+        VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME,
+#   endif
     };
 
     // Common functions.
@@ -3896,6 +3906,11 @@ namespace plume {
             featuresChain = &accelerationStructureFeatures;
         }
 
+        VkPhysicalDeviceTimelineSemaphoreFeatures timelineFeatures = {};
+        timelineFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES;
+        timelineFeatures.pNext = featuresChain;
+        featuresChain = &timelineFeatures;
+
         VkPhysicalDeviceFeatures2 deviceFeatures = {};
         deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
         deviceFeatures.pNext = featuresChain;
@@ -3968,6 +3983,12 @@ namespace plume {
         if (portabilityFound) {
             portabilityFeatures.pNext = createDeviceChain;
             createDeviceChain = &portabilityFeatures;
+        }
+
+        timelineSemaphoreSupported = timelineFeatures.timelineSemaphore == VK_TRUE;
+        if (timelineSemaphoreSupported) {
+            timelineFeatures.pNext = createDeviceChain;
+            createDeviceChain = &timelineFeatures;
         }
 
         // Retrieve the information for the queue families.
